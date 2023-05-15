@@ -1,36 +1,36 @@
 # Project Zillow
 
-Predict the tax assessed values of Zillow Single Family Residential properties with transaction date in 2017
+Predict the tax assessed property value of Zillow Single Family Residential properties with transaction date in 2017
 
 ### Project Description
 
-Zillow...
+As the most-visited real estate website in the United States, Zillow and its affiliates offer customers an on-demand experience for selling, buying, renting and financing with transparency and nearly seamless end-to-end service. I have decided to look into the different elements that determine tax assessed property value.
 
 ### Project Goal
 
-* Discover drivers of ...
-* Use drivers to develop a machine learning model to  ...
-* This information could be used to further our understanding of ...
+* Discover drivers of property value
+* Use drivers to develop a machine learning model to predict property value
+* This information could be used to further our understanding of how Single Family properties are tax assessed for their property value
 
 ### Initial Thoughts
 
-My initial hypothesis is that drivers of ...
+My initial hypothesis is that drivers of tax assessed property value will be the elements like number of rooms, square feet, and location.
 
 ## The Plan
 
 * Acquire data from Codeup MySQL DB
 * Prepare data
   * Create Engineered columns from existing data
-* Explore data in search of drivers of ...
+* Explore data in search of drivers of property value
   * Answer the following initial questions
-    * ?
-    * ?
-    * ?
-    * ?
-* Develop a Model to predict if ...
+    * Is there a correlation between area and property value?
+    * Is there a correlation between beds and property value?
+    * Is there a correlation between baths and property value?
+    * Is there a correlation between rooms and property value?
+* Develop a Model to predict property value
   * Use drivers identified in explore to help build predictive models of different types
   * Evaluate models on train and validate data
-  * Select the best model based on ...
+  * Select the best model based on $RMSE$ and $R^2$
   * Evaluate the best model on test data
 * Draw conclusions
 
