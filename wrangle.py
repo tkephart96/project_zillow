@@ -2,7 +2,10 @@
 Wrangle Zillow Data
 
 Functions:
+- wrangle_zillow_mvp
 - wrangle_zillow
+    - get_zillow
+    - prep4ex_zillow
 - split_zillow
 - mm_zillow
 - std_zillow
@@ -39,14 +42,104 @@ def get_zillow(user=user,password=password,host=host):
     else:
         # read sql query into df
         # 261 is single family residential id
-        df = pd.read_sql('''select *
-                            from properties_2017
-                            left join predictions_2017 using (parcelid)
-                            where propertylandusetypeid = 261'''
+        df = pd.read_sql('''select * 
+                            from properties_2017 
+                            left join predictions_2017 using(parcelid) 
+                            where propertylandusetypeid in (261,279)'''
                             , f'mysql+pymysql://{user}:{password}@{host}/zillow')
+        # filter to just 2017 transactions
+        df = df[df['transactiondate'].str.startswith("2017", na=False)]
         # cache data locally
         df.to_csv(filename, index=False)
     return df
+
+def prep4ex_zillow(df):
+    '''send uncleaned zillow df to prep for exploration'''
+    # replace missing values with "0" or appropriate value where it makes sense
+    df = df.fillna({'numberofstories':0
+                    ,'yardbuildingsqft26':0
+                    ,'yardbuildingsqft17':0
+                    ,'unitcnt':0
+                    ,'threequarterbathnbr':0
+                    ,'pooltypeid7':0
+                    ,'pooltypeid2':0
+                    ,'pooltypeid10':0
+                    ,'poolsizesum':0
+                    ,'poolcnt':0
+                    ,'hashottuborspa':0
+                    ,'garagetotalsqft':0
+                    ,'garagecarcnt':0
+                    ,'fireplacecnt':0
+                    ,'lotsizesquarefeet': df['calculatedfinishedsquarefeet']})
+    # split transaction date to year, month, and day
+    df_split = df['transactiondate'].str.split(pat='-', expand=True).add_prefix('trx_')
+    df = pd.concat([df.iloc[:, :40], df_split, df.iloc[:, 40:]], axis=1)
+    # rename columns
+    df = df.rename(columns=({'yearbuilt':'year'
+                            ,'bedroomcnt':'beds'
+                            ,'bathroomcnt':'baths'
+                            ,'calculatedfinishedsquarefeet':'area'
+                            ,'taxvaluedollarcnt':'prop_value'
+                            ,'fips':'county'
+                            ,'trx_1':'trx_month'
+                            ,'trx_2':'trx_day'
+                            ,'lotsizesquarefeet':'lotsize'
+                            ,'numberofstories':'stories'
+                            ,'poolcnt':'pools'
+                            ,'pooltypeid10':'spa_or_hottub'
+                            ,'pooltypeid2':'pool_w_spa_hottub'
+                            ,'pooltypeid7':'pool_wo_hottub'
+                            ,'yardbuildingsqft17':'patio_size'
+                            ,'yardbuildingsqft26':'storage_size'}))
+    # Drop columns that have too many nulls, are related to target, are dupes, or have no use for exploration or modeling
+    df = df.drop(columns=['id','airconditioningtypeid','architecturalstyletypeid','basementsqft','buildingqualitytypeid'
+                        ,'buildingclasstypeid','decktypeid','finishedfloor1squarefeet','finishedsquarefeet13','fullbathcnt'
+                        ,'finishedsquarefeet15','finishedsquarefeet50','finishedsquarefeet6','heatingorsystemtypeid'
+                        ,'storytypeid','typeconstructiontypeid','structuretaxvaluedollarcnt','landtaxvaluedollarcnt'
+                        ,'taxamount','taxdelinquencyyear','id.1','regionidneighborhood','propertyzoningdesc','calculatedbathnbr'
+                        ,'finishedsquarefeet12','censustractandblock','trx_0','propertylandusetypeid','fireplaceflag'
+                        ,'regionidcounty','assessmentyear','taxdelinquencyflag','logerror','propertycountylandusecode'])
+    # drop nulls
+    df = df.dropna()
+    # map county to fips
+    df.county = df.county.map({6037:'LA',6059:'Orange',6111:'Ventura'})
+    # make int
+    ints = ['year','beds','area','prop_value','trx_month','trx_day']
+    for i in ints:
+        df[i] = df[i].astype(int)
+    # Sort by column: 'transactiondate' (descending) for dropping dupes keeping recent
+    df = df.sort_values(['transactiondate'], ascending=[False])
+    # Drop duplicate rows in column: 'parcelid', keeping max trx date
+    df = df.drop_duplicates(subset=['parcelid'])
+    # sort columns and index for my own eyes
+    df=df[['parcelid', 'year', 'baths', 'threequarterbathnbr', 'beds', 'roomcnt', 'fireplacecnt',
+            'garagecarcnt', 'garagetotalsqft', 
+            'hashottuborspa', 'pools', 'spa_or_hottub', 'pool_w_spa_hottub', 'pool_wo_hottub', 'poolsizesum', 
+            'area', 'lotsize', 'patio_size', 'storage_size', 'stories', 'unitcnt', 
+            'rawcensustractandblock', 'county', 'regionidcity', 'regionidzip', 'latitude', 'longitude',
+            'transactiondate', 'trx_month', 'trx_day', 'prop_value']].sort_index()
+    # drop outlier rows based on column: 'prop_value' and 'area'
+    df = df[(df['prop_value'] < df['prop_value'].quantile(.98)) & (df['area'] < 6000)]
+    return df
+
+def wrangle_zillow_mvp():
+    """
+    This function wrangles data from a SQL database of Zillow properties, caches it locally, drops null
+    values, renames columns, maps county to fips, converts certain columns to integers, and handles
+    outliers.
+    
+    :param user: The username for accessing the MySQL database
+    :param password: The password is unique per user saved in env
+    :param host: The host parameter is the address of the server where the Zillow database is hosted
+    :return: The function `wrangle_zillow` is returning a cleaned and wrangled pandas DataFrame
+    containing information on single family residential properties in Los Angeles, Orange, and Ventura
+    counties, including the year built, number of bedrooms and bathrooms, square footage, property value,
+    property tax, and county. The DataFrame has been cleaned by dropping null values, renaming columns,
+    mapping county codes to county names, converting certain columns
+    """
+    df = get_zillow()
+    df = prep4ex_zillow(df)
+    return df[['beds','baths','area','prop_value']].assign(rooms=(df.beds+df.baths))
 
 def wrangle_zillow():
     """
@@ -64,26 +157,7 @@ def wrangle_zillow():
     mapping county codes to county names, converting certain columns
     """
     df = get_zillow()
-    # nulls account for less than 1% so dropping
-    df = df.dropna()
-    # rename columns
-    df = df.rename(columns=({'yearbuilt':'year'
-                            ,'bedroomcnt':'beds'
-                            ,'bathroomcnt':'baths'
-                            ,'calculatedfinishedsquarefeet':'area'
-                            ,'taxvaluedollarcnt':'prop_value'
-                            ,'taxamount':'prop_tax'
-                            ,'fips':'county'}))
-    # map county to fips
-    df.county = df.county.map({6037:'LA',6059:'Orange',6111:'Ventura'})
-    # make int
-    ints = ['year','beds','area','prop_value']
-    for i in ints:
-        df[i] = df[i].astype(int)
-    # handle outliers
-    df = df[df.area < 25000].copy()
-    df = df[df.prop_value < df.prop_value.quantile(.95)].copy()
-    df = df[(df['beds'] != 0) & (df['baths'] != 0)].copy()
+    df = prep4ex_zillow(df)
     return df
 
 ### SPLIT DATA ###
