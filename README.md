@@ -65,16 +65,15 @@ FIPS County Codes:
 
 # Conclusions
 
-### Takeaways and Key Findings
+#### Takeaways and Key Findings
 
-* ?
-* ?
-* ?
+* There is a correlation between each feature (area, beds, baths, and rooms) with property value
+* Area seemed to be the most correlated feature and models worked best with it included
 
-### Recommendations
+#### Recommendations
 
-* ?
+* Make sure that area is included and accurate when a property is added for best predictions
 
-### Next Steps
+#### Next Steps
 
-* Given more time I could check ...
+* Given more time I could check other features such as location to hopefully get more insights and build a better model

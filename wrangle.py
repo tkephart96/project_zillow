@@ -83,22 +83,18 @@ def prep4ex_zillow(df):
                             ,'fips':'county'
                             ,'trx_1':'trx_month'
                             ,'trx_2':'trx_day'
-                            ,'lotsizesquarefeet':'lotsize'
                             ,'numberofstories':'stories'
-                            ,'poolcnt':'pools'
-                            ,'pooltypeid10':'spa_or_hottub'
-                            ,'pooltypeid2':'pool_w_spa_hottub'
-                            ,'pooltypeid7':'pool_wo_hottub'
-                            ,'yardbuildingsqft17':'patio_size'
-                            ,'yardbuildingsqft26':'storage_size'}))
-    # Drop columns that have too many nulls, are related to target, are dupes, or have no use for exploration or modeling
-    df = df.drop(columns=['id','airconditioningtypeid','architecturalstyletypeid','basementsqft','buildingqualitytypeid'
-                        ,'buildingclasstypeid','decktypeid','finishedfloor1squarefeet','finishedsquarefeet13','fullbathcnt'
-                        ,'finishedsquarefeet15','finishedsquarefeet50','finishedsquarefeet6','heatingorsystemtypeid'
-                        ,'storytypeid','typeconstructiontypeid','structuretaxvaluedollarcnt','landtaxvaluedollarcnt'
-                        ,'taxamount','taxdelinquencyyear','id.1','regionidneighborhood','propertyzoningdesc','calculatedbathnbr'
-                        ,'finishedsquarefeet12','censustractandblock','trx_0','propertylandusetypeid','fireplaceflag'
-                        ,'regionidcounty','assessmentyear','taxdelinquencyflag','logerror','propertycountylandusecode'])
+                            ,'poolcnt':'pools'}))
+    # filter out/drop columns that have too many nulls, are related to target, are dupes, or have no use for exploration or modeling
+    df = df.drop(columns=['id', 'airconditioningtypeid', 'architecturalstyletypeid', 'basementsqft','buildingclasstypeid',
+                                'buildingqualitytypeid', 'calculatedbathnbr', 'decktypeid','finishedfloor1squarefeet',
+                                'finishedsquarefeet12', 'finishedsquarefeet13', 'finishedsquarefeet15', 'finishedsquarefeet50', 
+                                'finishedsquarefeet6', 'fullbathcnt', 'heatingorsystemtypeid','lotsizesquarefeet',
+                                'pooltypeid10', 'pooltypeid2', 'pooltypeid7', 'propertycountylandusecode', 'propertylandusetypeid',
+                                'propertyzoningdesc', 'rawcensustractandblock', 'regionidcity', 'regionidcounty', 'regionidneighborhood', 
+                                'regionidzip', 'storytypeid', 'threequarterbathnbr', 'typeconstructiontypeid', 'yardbuildingsqft17', 
+                                'yardbuildingsqft26', 'fireplaceflag', 'structuretaxvaluedollarcnt', 'assessmentyear', 'landtaxvaluedollarcnt',
+                                'taxamount', 'taxdelinquencyflag', 'taxdelinquencyyear', 'censustractandblock', 'id.1', 'logerror'])
     # drop nulls
     df = df.dropna()
     # map county to fips
@@ -107,17 +103,17 @@ def prep4ex_zillow(df):
     ints = ['year','beds','area','prop_value','trx_month','trx_day']
     for i in ints:
         df[i] = df[i].astype(int)
-    # Sort by column: 'transactiondate' (descending) for dropping dupes keeping recent
+    # sort by column: 'transactiondate' (descending) for dropping dupes keeping recent
     df = df.sort_values(['transactiondate'], ascending=[False])
-    # Drop duplicate rows in column: 'parcelid', keeping max trx date
+    # drop duplicate rows in column: 'parcelid', keeping max trx date
     df = df.drop_duplicates(subset=['parcelid'])
-    # sort columns and index for my own eyes
-    df=df[['parcelid', 'year', 'baths', 'threequarterbathnbr', 'beds', 'roomcnt', 'fireplacecnt',
+    # then sort columns and index for my own eyes
+    df=df[['year', 'baths', 'beds', 'roomcnt', 'fireplacecnt',
             'garagecarcnt', 'garagetotalsqft', 
-            'hashottuborspa', 'pools', 'spa_or_hottub', 'pool_w_spa_hottub', 'pool_wo_hottub', 'poolsizesum', 
-            'area', 'lotsize', 'patio_size', 'storage_size', 'stories', 'unitcnt', 
-            'rawcensustractandblock', 'county', 'regionidcity', 'regionidzip', 'latitude', 'longitude',
-            'transactiondate', 'trx_month', 'trx_day', 'prop_value']].sort_index()
+            'hashottuborspa', 'pools', 'poolsizesum', 
+            'area', 'stories', 'unitcnt', 
+            'county', 'latitude', 'longitude',
+            'trx_month', 'trx_day', 'prop_value']].sort_index()
     # drop outlier rows based on column: 'prop_value' and 'area'
     df = df[(df['prop_value'] < df['prop_value'].quantile(.98)) & (df['area'] < 6000)]
     return df

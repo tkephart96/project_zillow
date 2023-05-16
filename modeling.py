@@ -2,7 +2,10 @@
 
 Functions:
 - metrics_reg
+- baseline
 - reg_mods
+- train_val_model
+- test_model
 '''
 
 ########## IMPORTS ##########
@@ -19,20 +22,37 @@ from sklearn.preprocessing import PolynomialFeatures
 
 ######### FUNCTIONS #########
 
-def metrics_reg(y, yhat):
+def metrics_reg(y, y_pred):
     """
-    send in y_true, y_pred & returns RMSE, R2
+    Input y and y_pred & get RMSE, R2
     """
-    rmse = mean_squared_error(y, yhat, squared=False)
-    r2 = r2_score(y, yhat)
+    rmse = mean_squared_error(y, y_pred, squared=False)
+    r2 = r2_score(y, y_pred)
     return rmse, r2
+
+def baseline(ytr,yv):
+    """
+    The function calculates and prints the baseline metrics of a model
+    that always predicts the mean in the target variable.
+    """
+    pred_mean = ytr.mean()[0]
+    ytr_p = ytr.assign(pred_mean=pred_mean)
+    yv_p = yv.assign(pred_mean=pred_mean)
+    rmse_tr = mean_squared_error(ytr,ytr_p.pred_mean)**.5
+    rmse_v = mean_squared_error(yv,yv_p.pred_mean)**.5
+    r2_tr = r2_score(ytr, ytr_p.pred_mean)
+    r2_v = r2_score(yv, yv_p.pred_mean)
+    print(f'Baseline Property Value: {round(((ytr.prop_value).mean()),2)}')
+    print(f'Train       RMSE: {rmse_tr}   R2: {r2_tr}')
+    print(f'Validate    RMSE: {rmse_v}    R2: {r2_v}')
 
 def reg_mods(Xtr,ytr,Xv,yv,features=None,alpha=1,degree=2,power=2):
     '''
-    send in X_train,y_train,X_val,y_val,and list of features
+    Input X_train,y_train,X_val,y_val, list of features, and alpha, degree, and power
     so that function will run through linear regression, lasso lars,
     polynomial feature regression, and tweedie regressor (glm)
     - diff feature combos
+    - diff hyper params
     - output as df
     '''
     if features is None:
@@ -55,30 +75,9 @@ def reg_mods(Xtr,ytr,Xv,yv,features=None,alpha=1,degree=2,power=2):
             'r2_v':r2_v
         }
     metrics = [output]
-    # # baseline as median
-    # pred_median = ytr.median()[0]
-    # ytr_p,yv_p=ytr,yv
-    # ytr_p = ytr_p.assign(pred_median=pred_median)
-    # yv_p = yv_p.assign(pred_median=pred_median)
-    # rmse_tr = mean_squared_error(ytr,ytr_p.pred_median)**.5
-    # rmse_v = mean_squared_error(yv,yv_p.pred_median)**.5
-    # r2_tr = r2_score(ytr, ytr_p.pred_median)
-    # r2_v = r2_score(yv, yv_p.pred_median)
-    # output = {
-    #         'model':'bl_median',
-    #         'features':'None',
-    #         'params':'None',
-    #         'rmse_tr':rmse_tr,
-    #         'rmse_v':rmse_v,
-    #         'r2_tr':r2_tr,
-    #         'r2_v':r2_v
-    #     }
-    # metrics.append(output)
     # create iterable for feature combos
     for r in range(1,(len(features)+1)):
-        # print(r)
         # cycle through feature combos for linear reg
-        # print('start lin reg')
         for feature in itertools.combinations(features,r):
             f = list(feature)
             # linear regression
@@ -95,13 +94,12 @@ def reg_mods(Xtr,ytr,Xv,yv,features=None,alpha=1,degree=2,power=2):
                     'features':f,
                     'params':'None',
                     'rmse_tr':rmse_tr,
-                    'r2_tr':r2_tr,
                     'rmse_v':rmse_v,
+                    'r2_tr':r2_tr,
                     'r2_v':r2_v
                 }
             metrics.append(output)
         # cycle through feature combos and alphas for lasso lars
-        # print('start lasso lars')
         for feature,a in itertools.product(itertools.combinations(features,r),alpha):
             f = list(feature)
             # lasso lars
@@ -118,13 +116,12 @@ def reg_mods(Xtr,ytr,Xv,yv,features=None,alpha=1,degree=2,power=2):
                     'features':f,
                     'params':f'alpha={a}',
                     'rmse_tr':rmse_tr,
-                    'r2_tr':r2_tr,
                     'rmse_v':rmse_v,
+                    'r2_tr':r2_tr,
                     'r2_v':r2_v
                 }
             metrics.append(output)
         # cycle through feature combos and degrees for polynomial feature reg
-        # print('start poly reg')
         for feature,d in itertools.product(itertools.combinations(features,r),degree):
             f = list(feature)
             # polynomial feature regression
@@ -144,48 +141,38 @@ def reg_mods(Xtr,ytr,Xv,yv,features=None,alpha=1,degree=2,power=2):
                     'features':f,
                     'params':f'degree={d}',
                     'rmse_tr':rmse_tr,
-                    'r2_tr':r2_tr,
                     'rmse_v':rmse_v,
+                    'r2_tr':r2_tr,
                     'r2_v':r2_v
                 }
             metrics.append(output)
         # cycle through feature combos, alphas, and powers for tweedie reg
-        # print('start tweedie reg')
         for feature,a,p in itertools.product(itertools.combinations(features,r),alpha,power):
             f = list(feature)
-            # print(f,' - ',a)
             # tweedie regressor glm
             lm = TweedieRegressor(power=p,alpha=a)
-            # print('model made')
             lm.fit(Xtr[f],ytr.prop_value)
-            # print('model fit')
             # metrics
             pred_lm_tr = lm.predict(Xtr[f])
-            # print('pred tr made',pred_lm_tr.max())
             rmse_tr,r2_tr = metrics_reg(ytr,pred_lm_tr)
-            # print('metric tr made')
             pred_lm_v = lm.predict(Xv[f])
-            # print('pred v made')
             rmse_v,r2_v = metrics_reg(yv,pred_lm_v)
-            # print('metric v made')
             # table-ize
             output ={
                     'model':'TweedieRegressor',
                     'features':f,
                     'params':f'power={p},alpha={a}',
                     'rmse_tr':rmse_tr,
-                    'r2_tr':r2_tr,
                     'rmse_v':rmse_v,
+                    'r2_tr':r2_tr,
                     'r2_v':r2_v
                 }
-            # print('output made')
             metrics.append(output)
-            # print('output append')
     return pd.DataFrame(metrics)
 
 def train_val_model(model,X_train,y_train,X_val,y_val):
     '''Input model type along with train and validate data and
-    it will return RMSE and R2 results per he selected model'''
+    it will return RMSE and R2 results per the selected model'''
     if model == 'lr':
         # features
         f=['baths_s', 'beds_s', 'area_s', 'rooms_s']
@@ -202,9 +189,9 @@ def train_val_model(model,X_train,y_train,X_val,y_val):
         print(f'Validate    RMSE: {rmse_v}    R2: {r2_v}')
     elif model == 'poly':
         # features
-        f=['baths_s', 'area_s', 'rooms_s']
+        f=['baths_s', 'beds_s', 'area_s']
         # polynomial feature regression
-        pf = PolynomialFeatures(degree=4)
+        pf = PolynomialFeatures(degree=2)
         X_train_pf = pf.fit_transform(X_train[f])
         X_val_pf = pf.transform(X_val[f])
         # model
@@ -222,7 +209,7 @@ def train_val_model(model,X_train,y_train,X_val,y_val):
         # features
         f=['beds_s', 'area_s', 'rooms_s']
         # model
-        ll = LassoLars(alpha=9)
+        ll = LassoLars(alpha=9,normalize=False,random_state=42)
         ll.fit(X_train[f],y_train)
         # metrics
         pred_ll_tr = ll.predict(X_train[f])
@@ -234,17 +221,34 @@ def train_val_model(model,X_train,y_train,X_val,y_val):
         print(f'Validate    RMSE: {rmse_v}    R2: {r2_v}')
     elif model == 'tweedie':
         # features
-        f=['baths_s', 'beds_s', 'area_s']
+        f=['beds_s', 'area_s', 'rooms_s']
         # model
-        tw = TweedieRegressor(power=1.75,alpha=7)
-        tw.fit(X_train[f],y_train)
+        tw = TweedieRegressor(power=1.75,alpha=4)
+        tw.fit(X_train[f],y_train.prop_value)
         # metrics
-        pred_tw_tr = lr.predict(X_train[f])
+        pred_tw_tr = tw.predict(X_train[f])
         rmse_tr,r2_tr = metrics_reg(y_train,pred_tw_tr)
-        pred_tw_v = lr.predict(X_val[f])
+        pred_tw_v = tw.predict(X_val[f])
         rmse_v,r2_v = metrics_reg(y_val,pred_tw_v)
         print('Tweedie Regressor')
         print(f'Train       RMSE: {rmse_tr}   R2: {r2_tr}')
         print(f'Validate    RMSE: {rmse_v}    R2: {r2_v}')
     else:
         print('Please include model argument: lr, poly, lasso, tweedie')
+
+def test_model(X_train,y_train,X_test,y_test):
+    '''Input train and test data and it will return RMSE and R2 test results'''
+    # features
+    f=['baths_s', 'beds_s', 'area_s']
+    # polynomial feature regression
+    pf = PolynomialFeatures(degree=2)
+    X_train_pf = pf.fit_transform(X_train[f])
+    X_test_pf = pf.transform(X_test[f])
+    # model
+    pr = LinearRegression()
+    pr.fit(X_train_pf,y_train)
+    # metrics
+    pred_pr_t = pr.predict(X_test_pf)
+    rmse_t,r2_t = metrics_reg(y_test,pred_pr_t)
+    print('Polynomial Features through Linear Regression')
+    print(f'Test    RMSE: {rmse_t}    R2: {r2_t}')
