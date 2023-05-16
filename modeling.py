@@ -170,7 +170,7 @@ def reg_mods(Xtr,ytr,Xv,yv,features=None,alpha=1,degree=2,power=2):
             metrics.append(output)
     return pd.DataFrame(metrics)
 
-def train_val_model(model,X_train,y_train,X_val,y_val):
+def mvp_model(model,X_train,y_train,X_val,y_val):
     '''Input model type along with train and validate data and
     it will return RMSE and R2 results per the selected model'''
     if model == 'lr':
@@ -236,7 +236,7 @@ def train_val_model(model,X_train,y_train,X_val,y_val):
     else:
         print('Please include model argument: lr, poly, lasso, tweedie')
 
-def test_model(X_train,y_train,X_test,y_test):
+def test_mvp_model(X_train,y_train,X_test,y_test):
     '''Input train and test data and it will return RMSE and R2 test results'''
     # features
     f=['baths_s', 'beds_s', 'area_s']

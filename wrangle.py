@@ -57,6 +57,7 @@ def prep4ex_zillow(df):
     '''send uncleaned zillow df to prep for exploration'''
     # replace missing values with "0" or appropriate value where it makes sense
     df = df.fillna({'numberofstories':0
+                    ,'fireplaceflag':0
                     ,'yardbuildingsqft26':0
                     ,'yardbuildingsqft17':0
                     ,'unitcnt':0
@@ -92,9 +93,11 @@ def prep4ex_zillow(df):
                                 'finishedsquarefeet6', 'fullbathcnt', 'heatingorsystemtypeid','lotsizesquarefeet',
                                 'pooltypeid10', 'pooltypeid2', 'pooltypeid7', 'propertycountylandusecode', 'propertylandusetypeid',
                                 'propertyzoningdesc', 'rawcensustractandblock', 'regionidcity', 'regionidcounty', 'regionidneighborhood', 
-                                'regionidzip', 'storytypeid', 'threequarterbathnbr', 'typeconstructiontypeid', 'yardbuildingsqft17', 
-                                'yardbuildingsqft26', 'fireplaceflag', 'structuretaxvaluedollarcnt', 'assessmentyear', 'landtaxvaluedollarcnt',
-                                'taxamount', 'taxdelinquencyflag', 'taxdelinquencyyear', 'censustractandblock', 'id.1', 'logerror'])
+                                'regionidzip', 'storytypeid', 'threequarterbathnbr', 'typeconstructiontypeid', 'yardbuildingsqft17', 'yardbuildingsqft26',
+                                'structuretaxvaluedollarcnt',
+                                'assessmentyear', 'landtaxvaluedollarcnt',
+                                'taxamount', 'taxdelinquencyflag', 'taxdelinquencyyear',
+                                'censustractandblock', 'id.1', 'logerror'])
     # drop nulls
     df = df.dropna()
     # map county to fips
@@ -109,11 +112,10 @@ def prep4ex_zillow(df):
     df = df.drop_duplicates(subset=['parcelid'])
     # then sort columns and index for my own eyes
     df=df[['year', 'baths', 'beds', 'roomcnt', 'fireplacecnt',
-            'garagecarcnt', 'garagetotalsqft', 
-            'hashottuborspa', 'pools', 'poolsizesum', 
-            'area', 'stories', 'unitcnt', 
+            'garagecarcnt', 'hashottuborspa', 'pools',
+            'area', 'stories',
             'county', 'latitude', 'longitude',
-            'trx_month', 'trx_day', 'prop_value']].sort_index()
+            'prop_value']].sort_index()
     # drop outlier rows based on column: 'prop_value' and 'area'
     df = df[(df['prop_value'] < df['prop_value'].quantile(.98)) & (df['area'] < 6000)]
     return df
