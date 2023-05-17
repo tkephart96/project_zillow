@@ -116,7 +116,7 @@ def lp(train):
     plt_loc(train)
 
 def dist(train):
-    plt.hist(train.prop_value,20)
+    plt.hist(train.prop_value,200)
     plt.title('Property Value Distribution')
     plt.ylabel('# of Properties')
     plt.xlabel('Property Value ($ Millions)')
