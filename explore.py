@@ -87,21 +87,34 @@ def ap(train):
     # explore area and property value
     pear(train,'area','prop_value')
     sns.regplot(data=train,x='area',y='prop_value',marker='.',line_kws={'color':'orange'})
+    plt.xlabel("Area in Square Feet")
+    plt.ylabel("Property Value ($ Millions)")
     plt.show()
 
 def yp(train):
     # explore age and property value
     pear(train,'age','prop_value')
     sns.regplot(data=train,x='age',y='prop_value',marker='.',line_kws={'color':'orange'})
+    plt.xlabel("Age of Property")
+    plt.ylabel("Property Value ($ Millions)")
     plt.show()
 
 def cp(train):
     # explore room count and property value
     pear(train,'roomcnt','prop_value')
     sns.regplot(data=train[train.roomcnt>0],x='roomcnt',y='prop_value',marker='.',line_kws={'color':'orange'})
+    plt.xlabel("Room Count")
+    plt.ylabel("Property Value ($ Millions)")
     plt.show()
 
 def lp(train):
     # explore average property value and counties
     nova(train[train.county=='LA'].prop_value,train[train.county=='Orange'].prop_value,train[train.county=='Ventura'].prop_value)
     plt_loc(train)
+
+def dist(train):
+    plt.hist(train.prop_value,20)
+    plt.title('Property Value Distribution')
+    plt.ylabel('# of Properties')
+    plt.xlabel('Property Value ($ Millions)')
+    plt.show()
