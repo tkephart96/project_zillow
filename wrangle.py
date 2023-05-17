@@ -259,5 +259,6 @@ def encode_county(df):
     Encode county column from zillow dataset
     '''
     df['Orange'] = df.county.map({'Orange':1,'Ventura':0,'LA':0})
+    df['LA'] = df.county.map({'Orange':0,'Ventura':0,'LA':1})
     df['Ventura'] = df.county.map({'Orange':0,'Ventura':1,'LA':0})
     return df
