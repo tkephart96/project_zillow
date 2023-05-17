@@ -87,6 +87,7 @@ def ap(train):
     # explore area and property value
     pear(train,'area','prop_value')
     sns.regplot(data=train,x='area',y='prop_value',marker='.',line_kws={'color':'orange'})
+    plt.title('Area and Property Value Correlation')
     plt.xlabel("Area in Square Feet")
     plt.ylabel("Property Value ($ Millions)")
     plt.show()
@@ -95,6 +96,7 @@ def yp(train):
     # explore age and property value
     pear(train,'age','prop_value')
     sns.regplot(data=train,x='age',y='prop_value',marker='.',line_kws={'color':'orange'})
+    plt.title('Age and Property Value Correlation')
     plt.xlabel("Age of Property")
     plt.ylabel("Property Value ($ Millions)")
     plt.show()
@@ -103,6 +105,7 @@ def cp(train):
     # explore room count and property value
     pear(train,'roomcnt','prop_value')
     sns.regplot(data=train[train.roomcnt>0],x='roomcnt',y='prop_value',marker='.',line_kws={'color':'orange'})
+    plt.title('Room Count and Property Value Correlation')
     plt.xlabel("Room Count")
     plt.ylabel("Property Value ($ Millions)")
     plt.show()
