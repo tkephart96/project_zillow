@@ -110,11 +110,11 @@ def prep4ex_zillow(df):
     df = df.sort_values(['transactiondate'], ascending=[False])
     # drop duplicate rows in column: 'parcelid', keeping max trx date
     df = df.drop_duplicates(subset=['parcelid'])
+    # add features
+    df = df.assign(age=2017-df.year)
     # then sort columns and index for my own eyes
-    df=df[['year', 'baths', 'beds', 'roomcnt', 'fireplacecnt',
-            'garagecarcnt', 'hashottuborspa', 'pools',
-            'area', 'stories',
-            'county', 'latitude', 'longitude',
+    df=df[['age', 'baths', 'beds', 'roomcnt',
+            'area', 'county', 'latitude', 'longitude',
             'prop_value']].sort_index()
     # drop outlier rows based on column: 'prop_value' and 'area'
     df = df[(df['prop_value'] < df['prop_value'].quantile(.98)) & (df['area'] < 6000)]

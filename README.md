@@ -24,9 +24,9 @@ My initial hypothesis is that drivers of tax assessed property value will be the
 * Explore data in search of drivers of property value
   * Answer the following initial questions
     * Is there a correlation between area and property value?
-    * Is there a correlation between beds and property value?
-    * Is there a correlation between baths and property value?
-    * Is there a correlation between rooms and property value?
+    * Is there a correlation between age and property value?
+    * Is there a correlation between the room count and property value?
+    * Is there a difference in average property value between counties?
 * Develop a Model to predict property value
   * Use drivers identified in explore to help build predictive models of different types
   * Evaluate models on train and validate data
@@ -36,16 +36,19 @@ My initial hypothesis is that drivers of tax assessed property value will be the
 
 ## Data Dictionary
 
-| Original                     | Feature    | Type    | Values              | Definition                                               |
-| :--------------------------- | :--------- | :------ | :------------------ | :------------------------------------------------------- |
-| yearbuilt                    | year       | Year    | 1801-2016           | The year the principal residence was built               |
-| bedroomcnt                   | beds       | Numeric | 1-25                | Number of bedrooms in home                               |
-| bathroomcnt                  | baths      | Numeric | 0.5-32              | Number of bathrooms in home including fractional         |
-| calculatedfinishedsquarefeet | area       | SqFt    | 1~1mil              | Calculated total finished living area                    |
-| taxvaluedollarcnt (target)   | prop_value | USD     | 1~98mil             | The total tax assessed value of the parcel/home          |
-| taxamount                    | prop_tax   | USD     | 1.85~1.3mil         | The total property tax assessed for that assessment year |
-| fips                         | county     | County  | LA, Orange, Ventura | Federal Information Processing Standard (these 3 in CA)  |
-| Additional Features          |            | Numeric | 1=True, 0=False     | Encoded categorical variables                            |
+| Original                     | Feature    | Type    | Definition                                              |
+| :--------------------------- | :--------- | :------ | :------------------------------------------------------ |
+| yearbuilt                    | year       | Year    | The year the principal residence was built              |
+| bedroomcnt                   | beds       | Numeric | Number of bedrooms in home                              |
+| bathroomcnt                  | baths      | Numeric | Number of bathrooms in home including fractional        |
+| roomcnt                      | roomcnt    | Numeric | Total number of rooms in the property                   |
+| calculatedfinishedsquarefeet | area       | SqFt    | Calculated total finished living area                   |
+| taxvaluedollarcnt (target)   | prop_value | USD     | The total tax assessed value of the parcel/home         |
+| fips                         | county     | County  | Federal Information Processing Standard (these 3 in CA) |
+| latitude                     | latitude   | Numeric | Latitude coordinates of property                        |
+| longitude                    | longitude  | Numeric | Longitude coordinates of property                       |
+| Additional Features          |            | Numeric | Encoded categorical variables                           |
+|                              | age        | Year    | How many years from 2017 since it was built             |
 
 FIPS County Codes:
 
@@ -67,13 +70,14 @@ FIPS County Codes:
 
 #### Takeaways and Key Findings
 
-* There is a correlation between each feature (area, beds, baths, and rooms) with property value
-* Area seemed to be the most correlated feature and models worked best with it included
+* The younger the property the better for property value
+* The bigger the living area the bigger the property value
+* Location matters for property value
+* Model still needs improvement
 
-#### Recommendations
+### Recommendations and Next Steps
 
-* Make sure that area is included and accurate when a property is added for best predictions
-
-#### Next Steps
-
-* Given more time I could check other features such as location to hopefully get more insights and build a better model
+* It would nice to have the data to check if the included appliances or the type of heating services (gas or electric) of the property would affect property value
+* More time is needed to work on features to better improve the model
+    - latitude and longitude could hopefully give insights into cities and neighborhoods with higher or lower property values
+    - pools and garages could also be looked into
