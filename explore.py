@@ -35,7 +35,7 @@ def plt_loc(df):
     p = p.assign(long=p.longitude/1000000)
     p = p.sort_values('prop_value')
     # make the size
-    plt.figure(figsize=[14,9])
+    plt.figure(figsize=[12,6])
     # generic legend example
     sns.scatterplot(data=p,y='lat',x='long',hue='prop_value',palette='Greys',alpha=1)
     # plot per county the lat long, hue on prop value
